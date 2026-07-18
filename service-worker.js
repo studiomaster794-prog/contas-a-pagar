@@ -1,5 +1,5 @@
 /* Minhas Contas — service worker simples para uso offline */
-const CACHE = 'minhas-contas-v4';
+const CACHE = 'minhas-contas-v7-purple';
 const ASSETS = [
   './',
   './index.html',
