@@ -1017,15 +1017,43 @@
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #818cf8;
-            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
+            border-color: #a78bfa;
+            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.18);
             background: rgba(255,255,255,0.08);
         }
         .form-group select option {
             background: #0f172a;
             color: var(--text);
         }
+        .form-group input[type="date"] {
+            min-height: 44px;
+            cursor: pointer;
+            color-scheme: dark;
+        }
+        [data-theme="light"] .form-group input[type="date"] {
+            color-scheme: light;
+        }
+        .form-group input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.85;
+            padding: 4px;
+            border-radius: 6px;
+        }
+        .form-group input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+            background: rgba(167, 139, 250, 0.15);
+        }
+        .field-hint {
+            display: block;
+            margin-top: 5px;
+            font-size: 0.7rem;
+            color: var(--text-3);
+            line-height: 1.35;
+        }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-row .form-group:has(input[type="date"]) {
+            min-width: 0;
+        }
         .form-actions {
             display: flex;
             gap: 10px;
@@ -1560,15 +1588,14 @@
                     <label for="fixed-name">Nome da conta *</label>
                     <input type="text" id="fixed-name" required placeholder="Ex: Aluguel, Internet, Cartão" autocomplete="off">
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="fixed-due-day">Dia do vencimento *</label>
-                        <input type="number" id="fixed-due-day" required min="1" max="31" placeholder="Ex: 5" inputmode="numeric">
-                    </div>
-                    <div class="form-group">
-                        <label for="fixed-value">Valor (R$) <span class="optional">(opcional)</span></label>
-                        <input type="number" id="fixed-value" step="0.01" min="0" placeholder="Opcional" inputmode="decimal">
-                    </div>
+                <div class="form-group">
+                    <label for="fixed-due-date">Data de vencimento *</label>
+                    <input type="date" id="fixed-due-date" required>
+                    <span class="field-hint">Toque no calendário para escolher o dia — ele se repete todo mês</span>
+                </div>
+                <div class="form-group">
+                    <label for="fixed-value">Valor (R$) <span class="optional">(opcional)</span></label>
+                    <input type="number" id="fixed-value" step="0.01" min="0" placeholder="Opcional" inputmode="decimal">
                 </div>
                 <div class="form-group">
                     <label for="fixed-category">Categoria</label>
@@ -1608,15 +1635,14 @@
                     <label for="extra-name">Nome da conta *</label>
                     <input type="text" id="extra-name" required placeholder="Ex: Supermercado, Farmácia" autocomplete="off">
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="extra-due-day">Dia do vencimento *</label>
-                        <input type="number" id="extra-due-day" required min="1" max="31" placeholder="Ex: 15" inputmode="numeric">
-                    </div>
-                    <div class="form-group">
-                        <label for="extra-value">Valor (R$) <span class="optional">(opcional)</span></label>
-                        <input type="number" id="extra-value" step="0.01" min="0" placeholder="Opcional" inputmode="decimal">
-                    </div>
+                <div class="form-group">
+                    <label for="extra-due-date">Data de vencimento *</label>
+                    <input type="date" id="extra-due-date" required>
+                    <span class="field-hint">Toque no calendário e escolha a data</span>
+                </div>
+                <div class="form-group">
+                    <label for="extra-value">Valor (R$) <span class="optional">(opcional)</span></label>
+                    <input type="number" id="extra-value" step="0.01" min="0" placeholder="Opcional" inputmode="decimal">
                 </div>
                 <div class="form-group">
                     <label for="extra-category">Categoria</label>
@@ -1724,6 +1750,24 @@
     function dueDateFor(day, year, month) {
         const d = clampDueDay(day, year, month);
         return `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    }
+
+    /** Valor YYYY-MM-DD para input type="date" */
+    function toDateInputValue(year, month, day) {
+        return dueDateFor(day, year, month);
+    }
+
+    function todayInputValue() {
+        const n = new Date();
+        return toDateInputValue(n.getFullYear(), n.getMonth(), n.getDate());
+    }
+
+    function dayFromDateInput(value) {
+        if (!value || typeof value !== 'string') return null;
+        const parts = value.split('-');
+        if (parts.length < 3) return null;
+        const day = parseInt(parts[2], 10);
+        return Number.isNaN(day) ? null : day;
     }
 
     function ensureMonth() {
@@ -2098,7 +2142,9 @@
             document.getElementById('modal-fixed-title').textContent = 'Editar conta fixa';
             document.getElementById('fixed-id').value = t.id;
             document.getElementById('fixed-name').value = t.name;
-            document.getElementById('fixed-due-day').value = t.dueDay;
+            document.getElementById('fixed-due-date').value = toDateInputValue(
+                state.currentYear, state.currentMonth, t.dueDay || 1
+            );
             document.getElementById('fixed-value').value = t.value ?? '';
             document.getElementById('fixed-category').value = t.category || 'outros';
             document.getElementById('fixed-notes').value = t.notes || '';
@@ -2107,6 +2153,7 @@
             document.getElementById('fixed-account-form').reset();
             document.getElementById('fixed-id').value = '';
             document.getElementById('fixed-category').value = 'outros';
+            document.getElementById('fixed-due-date').value = todayInputValue();
         }
         modal.classList.remove('hidden');
         setTimeout(() => document.getElementById('fixed-name').focus(), 80);
@@ -2120,7 +2167,8 @@
             document.getElementById('modal-extra-title').textContent = 'Editar conta';
             document.getElementById('extra-id').value = b.id;
             document.getElementById('extra-name').value = b.name;
-            document.getElementById('extra-due-day').value = b.dueDay || (b.dueDate ? Number(b.dueDate.split('-')[2]) : '');
+            document.getElementById('extra-due-date').value = b.dueDate
+                || toDateInputValue(state.currentYear, state.currentMonth, b.dueDay || 1);
             document.getElementById('extra-value').value = b.value ?? '';
             document.getElementById('extra-category').value = b.category || 'outros';
             document.getElementById('extra-notes').value = b.notes || '';
@@ -2129,7 +2177,7 @@
             document.getElementById('extra-account-form').reset();
             document.getElementById('extra-id').value = '';
             document.getElementById('extra-category').value = 'outros';
-            document.getElementById('extra-due-day').value = new Date().getDate();
+            document.getElementById('extra-due-date').value = todayInputValue();
         }
         modal.classList.remove('hidden');
         setTimeout(() => document.getElementById('extra-name').focus(), 80);
@@ -2333,10 +2381,11 @@
         document.getElementById('fixed-account-form').addEventListener('submit', e => {
             e.preventDefault();
             const id = document.getElementById('fixed-id').value;
+            const dueDay = dayFromDateInput(document.getElementById('fixed-due-date').value);
             const data = {
                 id: id || genId(),
                 name: document.getElementById('fixed-name').value.trim(),
-                dueDay: parseInt(document.getElementById('fixed-due-day').value, 10),
+                dueDay,
                 value: (() => {
                     const v = document.getElementById('fixed-value').value;
                     if (v === '' || v === null) return null;
@@ -2375,8 +2424,8 @@
         document.getElementById('extra-account-form').addEventListener('submit', e => {
             e.preventDefault();
             const id = document.getElementById('extra-id').value;
-            const day = parseInt(document.getElementById('extra-due-day').value, 10);
-            const dueDate = dueDateFor(day, state.currentYear, state.currentMonth);
+            const dueDate = document.getElementById('extra-due-date').value;
+            const day = dayFromDateInput(dueDate);
             const data = {
                 id: id || genId(),
                 name: document.getElementById('extra-name').value.trim(),
@@ -2393,7 +2442,7 @@
                 paid: false,
                 type: 'extra'
             };
-            if (!data.name || !data.dueDay) return;
+            if (!data.name || !data.dueDay || !data.dueDate) return;
 
             const bills = currentBills();
             if (id) {
