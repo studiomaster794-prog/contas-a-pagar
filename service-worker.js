@@ -1,16 +1,11 @@
 /* Minhas Contas — service worker simples para uso offline */
-const CACHE = 'minhas-contas-v3';
+const CACHE = 'minhas-contas-v4';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
-  './icon-rounded-192.png',
-  './icon-rounded-512.png',
-  './apple-touch-icon.png',
-  './favicon-64.png',
-  './favicon-128.png',
   './icone-app.png'
 ];
 

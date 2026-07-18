@@ -32,6 +32,7 @@ npx --yes serve .
 
 - `index.html` — app completo
 - `manifest.json` + `service-worker.js` — PWA
-- `icone-app.png` / `icon-*.png` — ícones
+- `icone-app.png` — ícone do app (UI)
+- `icon-192.png` / `icon-512.png` — ícones PWA
 
 Os dados ficam salvos no aparelho (`localStorage`).
