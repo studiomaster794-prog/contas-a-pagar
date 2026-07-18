@@ -1,0 +1,7 @@
+.tools/
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+generate-icons.js
+icone-app.jpg
